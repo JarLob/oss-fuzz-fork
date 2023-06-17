@@ -52,7 +52,14 @@ class BaseFuzzTargetRunner:
 
   def get_fuzz_targets(self):
     """Returns fuzz targets in out directory."""
-    return utils.get_fuzz_targets(self.workspace.out)
+    targets = utils.get_fuzz_targets(self.workspace.out)
+    return self.filter_fuzz_target(targets)
+
+  def filter_fuzz_target(self, targets):
+    if self.config.fuzz_target:
+      logging.info('Fuzz target scoped to %s.', self.config.fuzz_target)
+      targets = [x for x in targets if x.endswith(f'/{self.config.fuzz_target}')]
+    return targets
 
   def initialize(self):
     """Initialization method. Must be called before calling run_fuzz_targets.
@@ -225,7 +232,8 @@ class CoverageTargetRunner(BaseFuzzTargetRunner):
 
   def get_fuzz_targets(self):
     """Returns fuzz targets in out directory."""
-    return get_coverage_fuzz_targets(self.workspace.out)
+    targets = get_coverage_fuzz_targets(self.workspace.out)
+    return self.filter_fuzz_target(targets)
 
   def run_fuzz_targets(self):
     """Generates a coverage report. Always returns False since it never finds
