@@ -42,7 +42,7 @@ def parse_options(options_file_path, options_section):
   options = parser[options_section]
 
   if options_section == 'libfuzzer':
-    options_string = (f'-{key}={value}' for key, value in options.items())
+    options_string = list(f'-{key}={value}' for key, value in options.items())
   else:
     # Sanitizer options.
     options_string = ':'.join(
@@ -81,7 +81,7 @@ FuzzResult = collections.namedtuple('FuzzResult',
 def get_libfuzzer_parallel_options():
   """Returns a list containing options to pass to libFuzzer to fuzz using all
   available cores."""
-  return ['-jobs=' + str(multiprocessing.cpu_count())]
+  return [f'-jobs={str(multiprocessing.cpu_count())}', f'-workers={str(multiprocessing.cpu_count())}']
 
 
 class ReproduceError(Exception):
@@ -205,7 +205,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
         options_file = f'{filename}.options'
         if os.path.exists(options_file):
           custom_options = parse_options(options_file, 'libfuzzer')
-          logging.info(f'Extending with "{list(custom_options)}" options.')
+          logging.info(f'Extending with "{custom_options}" options.')
           options.arguments.extend(custom_options)
 
         options.merge_back_new_testcases = False
