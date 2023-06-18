@@ -27,7 +27,28 @@ import clusterfuzz.fuzz
 import config_utils
 import logs
 
+import configparser
+
 logs.init()
+
+def parse_options(options_file_path, options_section):
+  """Parses the given file and returns options from the given section."""
+  parser = configparser.ConfigParser()
+  parser.read(options_file_path)
+
+  if not parser.has_section(options_section):
+    return None
+
+  options = parser[options_section]
+
+  if options_section == 'libfuzzer':
+    options_string = (f'-{key}={value}' for key, value in options.items())
+  else:
+    # Sanitizer options.
+    options_string = ':'.join(
+        '%s=%s' % (key, value) for key, value in options.items())
+
+  return options_string
 
 # Use len_control=0 since we don't have enough time fuzzing for len_control to
 # make sense (probably).
@@ -199,6 +220,14 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
         engine_impl = clusterfuzz.fuzz.get_engine(config_utils.DEFAULT_ENGINE)
         options = engine_impl.prepare(corpus_path, env.target_path,
                                       env.build_dir)
+
+        filename, file_extension = os.path.splitext(self.target_path)
+        options_file = f'{filename}.options'
+        if os.path.exists(options_file):
+          custom_options = parse_options(options_file, 'libfuzzer')
+          logging.info(f'Extending with "{list(custom_options)}" options.')
+          options.arguments.extend(custom_options)
+
         options.merge_back_new_testcases = False
         options.analyze_dictionary = False
         if batch:
