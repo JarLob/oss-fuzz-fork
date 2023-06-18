@@ -30,7 +30,8 @@ sys.path.append(INFRA_DIR)
 
 import retry
 
-_PUSH_RETRIES = 3
+_PUSH_RETRIES = 100
+_PUSH_DELAY   = 1
 _PUSH_BACKOFF = 1
 _GIT_EMAIL = 'cifuzz@clusterfuzz.com'
 _GIT_NAME = 'CIFuzz'
@@ -82,7 +83,7 @@ class GitFilestore(filestore.BaseFilestore):
     self._git('clean', '-fxd')
 
   # pylint: disable=too-many-arguments
-  @retry.wrap(_PUSH_RETRIES, _PUSH_BACKOFF)
+  @retry.wrap(_PUSH_RETRIES, _PUSH_DELAY, _PUSH_BACKOFF)
   def _upload_to_git(self,
                      message,
                      branch,

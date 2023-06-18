@@ -169,6 +169,7 @@ class ClusterFuzzLite(BaseClusterFuzzDeployment):
     except Exception as err:  # pylint: disable=broad-except
       logging.error('Failed to upload corpus for target: %s. Error: %s.',
                     target_name, err)
+      raise
 
   def upload_build(self, commit):
     """Upload the build produced by CIFuzz as the latest build."""
