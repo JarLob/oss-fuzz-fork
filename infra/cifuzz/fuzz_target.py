@@ -252,10 +252,15 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
                                              self.target_path):
       engine_impl = clusterfuzz.fuzz.get_engine(config_utils.DEFAULT_ENGINE)
       minimized_testcase_path = testcase_path + '-minimized'
-      return engine_impl.minimize_testcase(self.target_path, [],
-                                           testcase_path,
-                                           minimized_testcase_path,
-                                           max_time=MINIMIZE_TIME_SECONDS)
+      try:
+        return engine_impl.minimize_testcase(self.target_path, [],
+                                            testcase_path,
+                                            minimized_testcase_path,
+                                            max_time=MINIMIZE_TIME_SECONDS)
+      except TimeoutError as error:
+        logging.error('%s.', error)
+        return False
+    return True
 
   def free_disk_if_needed(self, delete_fuzz_target=True):
     """Deletes things that are no longer needed from fuzzing this fuzz target to
