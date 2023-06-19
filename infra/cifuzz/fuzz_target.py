@@ -81,6 +81,22 @@ def get_fuzz_target_pruned_corpus_dir(workspace, target_name):
   |workspace|."""
   return os.path.join(workspace.pruned_corpora, target_name)
 
+class IsCrashReportable:
+  def __init__(self, fuzz_target, input_path, reproduce_args, batch):
+    self.fuzz_target = fuzz_target
+    self.input_path = input_path
+    self.reproduce_args = reproduce_args
+    self.batch = batch
+    self.cached = False
+    self.is_reportable = False
+
+  def is_crash_reportable(self):
+    if(not self.cached):
+      self.is_reportable = self.fuzz_target.is_crash_reportable(self.input_path,
+                                                                self.reproduce_args,
+                                                                self.batch)
+      self.cached = True
+    return self.is_reportable
 
 class FuzzTarget:  # pylint: disable=too-many-instance-attributes
   """A class to manage a single fuzz target.
@@ -223,16 +239,17 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
 
       # Only report first crash.
       crash = result.crashes[0]
-      logging.info('Fuzzer: %s. Detected bug.', self.target_name)
+      logging.info(f'Fuzzer: {self.target_name}. Detected {len(result.crashes)} bug(s). Using only the first one.')
 
-      is_reportable = self.is_crash_reportable(crash.input_path,
-                                               crash.reproduce_args,
-                                               batch=batch)
-      if is_reportable or self.config.upload_all_crashes:
+      is_reportable_delayed = IsCrashReportable(self,
+                                                crash.input_path,
+                                                crash.reproduce_args,
+                                                batch=batch)
+      if self.config.upload_all_crashes or is_reportable_delayed.is_crash_reportable():
         logging.info('SAVING CRASH')
         fuzzer_logs = result.logs
         testcase_path = self._save_crash(crash)
-        if is_reportable and self.config.minimize_crashes:
+        if self.config.minimize_crashes and is_reportable_delayed.is_crash_reportable():
           # TODO(metzman): We don't want to minimize unreproducible crashes.
           # Use is_reportable to decide this even though reportable crashes
           # are a subset of reproducible ones.
