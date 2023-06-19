@@ -404,6 +404,8 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
       return self.config.report_ooms
     if testcase.startswith('timeout-'):
       return self.config.report_timeouts
+    if testcase.startswith('slow-'):
+      return False
     return True
 
   def is_crash_novel(self, testcase, reproduce_args):
