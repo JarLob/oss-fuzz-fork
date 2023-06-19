@@ -243,7 +243,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
 
       # Only report first crash.
       crash = result.crashes[0]
-      logging.info(f'Fuzzer: {self.target_name}. Detected {result.crashes} bug(s). Using only the first one.')
+      logging.info(f'Fuzzer: {self.target_name}. Detected {len(result.crashes)} bug(s). Using only the first one.')
 
       is_reportable_delayed = IsCrashReportable(self,
                                                 crash.input_path,
