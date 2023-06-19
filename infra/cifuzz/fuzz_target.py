@@ -171,8 +171,16 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
                                              self.config.sanitizer,
                                              self.target_path):
       engine_impl = clusterfuzz.fuzz.get_engine(config_utils.DEFAULT_ENGINE)
+
+      arguments = [self.latest_corpus_path]
+      if not self.config.report_ooms:
+        arguments.extend(LIBFUZZER_OPTIONS_NO_REPORT_OOM)
+      if self.config.fuzz_target_timeout:
+        arguments.extend([f'-timeout={self.config.fuzz_target_timeout}'])
+      logging.info(f'Using arguments: {arguments}')
+
       result = engine_impl.minimize_corpus(self.target_path, [],
-                                           [self.latest_corpus_path],
+                                           arguments,
                                            self.pruned_corpus_path,
                                            self._target_artifact_path(),
                                            self.duration)
@@ -225,6 +233,8 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
           else:
             options.arguments.extend(
                 get_libfuzzer_parallel_options(self.config.parallel_fuzzing))
+
+        logging.info(f'Using arguments: {options.arguments}')
 
         result = engine_impl.fuzz(self.target_path, options, artifacts_dir,
                                   self.duration)
