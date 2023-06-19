@@ -57,10 +57,14 @@ FuzzResult = collections.namedtuple('FuzzResult',
                                     ['testcase', 'stacktrace', 'corpus_path'])
 
 
-def get_libfuzzer_parallel_options():
+def get_libfuzzer_parallel_options(option):
   """Returns a list containing options to pass to libFuzzer to fuzz using all
   available cores."""
-  return [f'-jobs={str(multiprocessing.cpu_count())}', f'-workers={str(multiprocessing.cpu_count())}']
+  if option == 'MAX':
+    cpu_count = str(multiprocessing.cpu_count())
+  else:
+    cpu_count = option
+  return [f'-jobs={cpu_count}', f'-workers={cpu_count}']
 
 
 class ReproduceError(Exception):
@@ -218,7 +222,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
           options.arguments.extend([f'-timeout={self.config.fuzz_target_timeout}'])
 
         if self.config.parallel_fuzzing:
-          options.arguments.extend(get_libfuzzer_parallel_options())
+          options.arguments.extend(get_libfuzzer_parallel_options(self.config.parallel_fuzzing))
 
         logging.info(f'Using arguments: {options.arguments}')
 
