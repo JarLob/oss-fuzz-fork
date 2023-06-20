@@ -65,6 +65,7 @@ class GitFilestore(filestore.BaseFilestore):
   def __del__(self):
     shutil.rmtree(self.repo_path)
 
+  @retry.wrap(5, 1, 2)
   def _clone(self, repo_url):
     """Clones repo URL."""
     self._git('clone', repo_url, '.')
