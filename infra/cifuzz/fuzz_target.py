@@ -240,7 +240,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
                                   self.duration)
         print(f'Fuzzing logs:\n{result.logs}')
 
-      if not result.crashes and not result.timed_out:
+      if not result.crashes:
         # Libfuzzer max time was reached.
         logging.info('Fuzzer %s finished with no crashes discovered.',
                      self.target_name)
@@ -414,13 +414,19 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
     OOM then returns True if config says we should report those."""
     # TODO(metzman): Use a less hacky method.
     testcase = os.path.basename(testcase)
+    if testcase.startswith('crash-'):
+      return True
     if testcase.startswith('oom-'):
       return self.config.report_ooms
     if testcase.startswith('timeout-'):
       return self.config.report_timeouts
+    if testcase.startswith('leak-'):
+      return self.config.report_leaks
     if testcase.startswith('slow-'):
+      logging.info('Slow case was reported. Does it happen?')
       return False
-    return True
+    logging.info(f'Unknown type of test case: {testcase}. Classifying as not reportable.')
+    return False
 
   def is_crash_novel(self, testcase, reproduce_args):
     """Returns whether or not the crash is new. A crash is considered new if it
