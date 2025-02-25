@@ -60,7 +60,7 @@ FuzzResult = collections.namedtuple('FuzzResult',
 def get_libfuzzer_parallel_options(option):
   """Returns a list containing options to pass to libFuzzer to fuzz using all
   available cores."""
-  if option == 'MAX':
+  if option == 'true' or (isinstance(option, bool) and option == True):
     cpu_count = str(multiprocessing.cpu_count())
   else:
     cpu_count = option
@@ -221,7 +221,10 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
         if self.config.fuzz_target_timeout:
           options.arguments.extend([f'-timeout={self.config.fuzz_target_timeout}'])
 
-        if self.config.parallel_fuzzing:
+        if (self.config.parallel_fuzzing == 'true' or
+            isinstance(self.config.parallel_fuzzing, int) or
+            (isinstance(self.config.parallel_fuzzing, bool) and
+             self.config.parallel_fuzzing == True)):
           if self.config.sanitizer == 'memory':
             # TODO(https://github.com/google/oss-fuzz/issues/11915): Don't gate
             # this after jobs is fixed for MSAN.
