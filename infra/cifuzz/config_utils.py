@@ -27,7 +27,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import platform_config
 import constants
 
-SANITIZERS = ['address', 'memory', 'undefined', 'coverage']
+SANITIZERS = ['address', 'memory', 'undefined', 'coverage', 'none']
 
 # TODO(metzman): Set these on config objects so there's one source of truth.
 DEFAULT_ENGINE = 'libfuzzer'
