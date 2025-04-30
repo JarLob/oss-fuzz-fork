@@ -168,7 +168,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
     """Prunes the corpus and returns the result."""
     self._download_corpus()
     with clusterfuzz.environment.Environment(config_utils.DEFAULT_ENGINE,
-                                             self.config.sanitizer,
+                                             'nosanitizer' if self.config.sanitizer == 'none' else self.config.sanitizer,
                                              self.target_path):
       engine_impl = clusterfuzz.fuzz.get_engine(config_utils.DEFAULT_ENGINE)
 
@@ -202,7 +202,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
     logging.info('Starting fuzzing')
     with tempfile.TemporaryDirectory() as artifacts_dir:
       with clusterfuzz.environment.Environment(config_utils.DEFAULT_ENGINE,
-                                               self.config.sanitizer,
+                                              'nosanitizer' if self.config.sanitizer == 'none' else self.config.sanitizer,
                                                self.target_path) as env:
         engine_impl = clusterfuzz.fuzz.get_engine(config_utils.DEFAULT_ENGINE)
         options = engine_impl.prepare(corpus_path, env.target_path,
@@ -279,7 +279,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
   def minimize_testcase(self, testcase_path):
     """Minimizes the testcase located at |testcase_path|."""
     with clusterfuzz.environment.Environment(config_utils.DEFAULT_ENGINE,
-                                             self.config.sanitizer,
+                                             'nosanitizer' if self.config.sanitizer == 'none' else self.config.sanitizer,
                                              self.target_path):
       engine_impl = clusterfuzz.fuzz.get_engine(config_utils.DEFAULT_ENGINE)
       minimized_testcase_path = testcase_path + '-minimized'
@@ -341,7 +341,7 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
 
     logging.info('Trying to reproduce crash using: %s.', testcase)
     with clusterfuzz.environment.Environment(config_utils.DEFAULT_ENGINE,
-                                             self.config.sanitizer,
+                                             'nosanitizer' if self.config.sanitizer == 'none' else self.config.sanitizer,
                                              target_path):
       reproduce_time_seconds = PER_LANGUAGE_REPRODUCE_TIMEOUTS.get(
           self.config.language, DEFAULT_REPRODUCE_TIME_SECONDS)
