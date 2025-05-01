@@ -16,6 +16,7 @@ import collections
 import logging
 import multiprocessing
 import os
+import re
 import shutil
 import stat
 import tempfile
@@ -239,6 +240,23 @@ class FuzzTarget:  # pylint: disable=too-many-instance-attributes
         result = engine_impl.fuzz(self.target_path, options, artifacts_dir,
                                   self.duration)
         print(f'Fuzzing logs:\n{result.logs}')
+
+        re_jobs = re.compile(r'Job (\d+) exited with exit code \d+')
+        jobs = re_jobs.findall(result.logs)
+        re_logs = re.compile(r' >fuzz-(\d+)\.log 2>&1')
+        logs = re_logs.findall(result.logs)
+        # We have mismatch if dumping a log to stderr failed because of
+        # max_stdout_len set to MAX_OUTPUT_LEN = 1 * 1024 * 1024 in ClusterFuzz
+        if len(jobs) != len(logs):
+          target_dir = os.path.dirname(self.target_path)
+          log_dir = os.path.dirname(target_dir)
+          missing_logs = [log for log in logs if log not in jobs]
+          for missing_log in missing_logs:
+            log_name = f'fuzz-{missing_log}.log'
+            log_path = os.path.join(log_dir, log_name)
+            with open(log_path, 'r') as f:
+              fuzz_log = f.read()
+            logging.info(f'{log_name} log:\n{fuzz_log}')
 
       if not result.crashes:
         # Libfuzzer max time was reached.
